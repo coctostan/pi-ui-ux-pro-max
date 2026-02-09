@@ -67,7 +67,7 @@ export default function (pi: ExtensionAPI) {
       };
 
       if (shouldPersist) {
-        const result = persistDesignSystem(ds, page, ctx.cwd);
+        const result = persistDesignSystem(ds, page, ctx.cwd, indices, query);
         details.persisted = {
           master: result.createdFiles[0],
           page: result.createdFiles[1],
