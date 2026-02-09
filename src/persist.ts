@@ -3,6 +3,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import type { DesignSystem } from "./types.js";
 
+/** Sanitize a string for use as a directory/file name */
+function slugify(input: string): string {
+  return input.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "unnamed";
+}
+
 export interface PersistResult {
   status: "success";
   designSystemDir: string;
@@ -15,7 +20,7 @@ export function persistDesignSystem(
   page: string | undefined,
   outputDir: string,
 ): PersistResult {
-  const projectSlug = ds.projectName.toLowerCase().replace(/\s+/g, "-");
+  const projectSlug = slugify(ds.projectName);
   const designSystemDir = path.join(outputDir, "design-system", projectSlug);
   const pagesDir = path.join(designSystemDir, "pages");
 
@@ -31,7 +36,7 @@ export function persistDesignSystem(
 
   // Write page override if requested
   if (page) {
-    const pageSlug = page.toLowerCase().replace(/\s+/g, "-");
+    const pageSlug = slugify(page);
     const pageFile = path.join(pagesDir, `${pageSlug}.md`);
     fs.writeFileSync(pageFile, formatPageOverrideMd(ds, page), "utf-8");
     createdFiles.push(pageFile);

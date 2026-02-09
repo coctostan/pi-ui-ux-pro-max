@@ -51,8 +51,6 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       query: Type.String({ description: "Descriptive query: product type, industry, mood, keywords" }),
       projectName: Type.Optional(Type.String({ description: "Project name for the design system" })),
-      stack: Type.Optional(StringEnum([...STACKS])),
-      format: Type.Optional(StringEnum(["markdown", "ascii"] as const)),
       persist: Type.Optional(Type.Boolean({ description: "Save design system to design-system/MASTER.md" })),
       page: Type.Optional(Type.String({ description: "Generate page-specific override file" })),
     }),

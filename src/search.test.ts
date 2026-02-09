@@ -42,9 +42,10 @@ describe("searchDomain", () => {
     expect(result.results.length).toBeLessThanOrEqual(1);
   });
 
-  it("filters zero-score results", () => {
+  it("returns empty results for nonexistent terms", () => {
     const result = searchDomain("xyznonexistentterm", "style", 3, indices);
-    expect(result.results.every((r) => Object.keys(r).length > 0 || true)).toBe(true);
+    expect(result.results).toEqual([]);
+    expect(result.count).toBe(0);
   });
 
   it("auto-detects domain when not specified", () => {
