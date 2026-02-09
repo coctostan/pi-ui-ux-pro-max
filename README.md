@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.jpg" alt="pi-ui-ux-pro-max banner" width="100%" />
+</p>
+
 # pi-ui-ux-pro-max
 
 UI/UX design intelligence for [pi](https://github.com/mariozechner/pi-coding-agent) — 67 styles, 97 color palettes, 57 font pairings, 100 reasoning rules, 24 landing patterns, and 13 tech stack guideline sets, all accessible through typed custom tools.
