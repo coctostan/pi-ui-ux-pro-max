@@ -145,12 +145,19 @@ export default function (pi: ExtensionAPI) {
       "Get implementation guidelines for a specific tech stack. Covers best practices, Do/Don't patterns, and code examples.",
     parameters: Type.Object({
       query: Type.String({ description: "What you need guidance on" }),
-      stack: StringEnum([...STACKS]),
+      stack: Type.Optional(StringEnum([...STACKS], { description: "Tech stack (uses default from /ui-settings if omitted)" })),
       maxResults: Type.Optional(Type.Number({ description: "Max results, default 3" })),
     }),
 
     async execute(toolCallId, params, signal, onUpdate, ctx) {
-      const { query, stack, maxResults = 3 } = params;
+      const { query, maxResults = 3 } = params;
+      const stack = params.stack ?? settings.defaultStack;
+      if (!stack) {
+        return {
+          content: [{ type: "text", text: "Error: stack is required. Specify a stack or set a default via /ui-settings." }],
+          isError: true,
+        };
+      }
 
       const result = searchStack(query, stack as StackName, maxResults, indices);
 
@@ -179,9 +186,64 @@ export default function (pi: ExtensionAPI) {
     renderResult: renderStackResult as any,
   });
 
-  // ============ Session Start: Load Settings ============
+  // ============ Session Start: Load Settings + Reconstruct State ============
   pi.on("session_start", async (_event, ctx) => {
     settings = loadSettings(path.join(ctx.cwd, ".pi"));
+
+    // Reconstruct active design system from session history
+    const branch = ctx.sessionManager?.getBranch?.();
+    if (branch) {
+      for (const entry of branch) {
+        if (
+          entry.type === "message" &&
+          entry.message.role === "toolResult" &&
+          entry.message.toolName === "design_system"
+        ) {
+          const details = entry.message.details as DesignSystemToolDetails | undefined;
+          if (details?.persisted?.master) {
+            activeDesignSystem = {
+              summary: `${details.designSystem.projectName}: ${details.designSystem.style.name} | ${details.designSystem.colors.primary} ${details.designSystem.colors.secondary} ${details.designSystem.colors.cta}`,
+              path: details.persisted.master,
+            };
+          }
+        }
+      }
+    }
+  });
+
+  // ============ /ui-settings Command ============
+  pi.registerCommand("ui-settings", {
+    description: "Configure UI/UX Pro Max settings (default stack, auto-inject, format)",
+    handler: async (_args, ctx) => {
+      const piDir = path.join(ctx.cwd, ".pi");
+      settings = loadSettings(piDir);
+
+      const lines: string[] = [];
+      lines.push("UI/UX Pro Max Settings");
+      lines.push("═".repeat(40));
+      lines.push("");
+      lines.push(`  Auto-inject design system:  ${settings.autoInjectDesignSystem ? "ON" : "OFF"}`);
+      lines.push(`  Default stack:              ${settings.defaultStack ?? "(none)"}`);
+      lines.push(`  Default output format:      ${settings.defaultFormat}`);
+      lines.push("");
+      lines.push("Edit settings in: .pi/ui-ux-pro-max.json");
+
+      return lines.join("\n");
+    },
+  });
+
+  // ============ Auto-Inject Hook (opt-in via /ui-settings) ============
+  pi.on("before_agent_start", async (_event, _ctx) => {
+    if (!settings.autoInjectDesignSystem) return;
+    if (!activeDesignSystem) return;
+
+    return {
+      message: {
+        customType: "ui-ux-context",
+        content: `Active design system: ${activeDesignSystem.summary}\nFull spec: ${activeDesignSystem.path}`,
+        display: false,
+      },
+    };
   });
 
   // ============ Context Hook: Prune old design_system iterations ============
