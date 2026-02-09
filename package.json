@@ -1,0 +1,17 @@
+{
+  "name": "pi-ui-ux-pro-max",
+  "version": "1.0.0",
+  "description": "UI/UX design intelligence for pi — 67 styles, 97 palettes, 57 font pairings, 13 stacks",
+  "keywords": ["pi-package"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./extensions"],
+    "prompts": ["./prompts"]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*",
+    "@mariozechner/pi-ai": "*",
+    "@sinclair/typebox": "*"
+  }
+}
